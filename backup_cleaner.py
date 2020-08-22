@@ -27,6 +27,7 @@ def compare():
     backup_drive,_ = os.path.splitdrive(path_backup)
     #print("Source Drive: {}".format(src_drive))
     #print("Backup Drive: {}".format(backup_drive))
+
     if len(sys.argv) == 4:
         log_file = str(sys.argv[3])
     else:
@@ -36,15 +37,14 @@ def compare():
 
     print ("Searching files: ...\n")
     dir_compare = filecmp.dircmp(path_src,path_backup)
-    #dir_compare.report_partial_closure()
 
-    print ("Diff files: \n {}\n".format(dir_compare.diff_files))
+    print("Diff files: \n {}\n".format(dir_compare.diff_files))
 
     file_rm_list = dir_compare.right_only
     empty_dir_rm_list = []
     dir_rm_list = []
 
-    print ("Files/dirs present in right only: {}\n".format(file_rm_list))
+    print("Files/dirs present in right only: {}\n".format(file_rm_list))
 
     for f in list(file_rm_list):
 
@@ -66,84 +66,84 @@ def compare():
             file_rm_list[file_rm_list.index(f)] = full_path
 
     common_dirs = dir_compare.common_dirs
-    #print ("\nCommon directories: \n {}\n".format(common_dirs))
-    print ("\n")
+    #print("\nCommon directories: \n {}\n".format(common_dirs))
+    print("\n")
 
-    for dir in common_dirs:
-        if '%APPDATA%' not in dir:
-            dir_path = os.path.join(path_backup,dir)
-            for root, dirs, files in os.walk(dir_path):
+    for directory in common_dirs:
+        if '%APPDATA%' not in directory:
+            dir_path = os.path.join(path_backup,directory)
+            for root, __, files in os.walk(dir_path):
                 src_path = root.replace(backup_drive, src_drive)
 
                 ### There's files in the directory, and it exists in source
                 if files and os.path.isdir(src_path):
-                    for file in files:
-                        src_filepath = os.path.join(src_path,file)
+                    for filenm in files:
+                        src_filepath = os.path.join(src_path, filenm)
 
                         if not os.path.isfile(src_filepath):
-                            file_rm_list.append(os.path.join(root,file))
-                            #print ("File not found in source path (added to file removal list): {}".format(os.path.join(src_path,file)))
-                            #print ("Added to removal list: {}\n".format(os.path.join(root,file)))
+                            file_rm_list.append(os.path.join(root,filenm))
+                            #print("File not found in source path (added to file removal list): {}".format(os.path.join(src_path,file)))
+                            #print("Added to removal list: {}\n".format(os.path.join(root,file)))
 
                 ### The directory is empty
                 elif not os.listdir(root):
                     empty_dir_rm_list.append(root)
-                    #print ("Empty directory Found (added to empty dir removal list): {}".format(root))
+                    #print("Empty directory Found (added to empty dir removal list): {}".format(root))
 
                 ### The directory was not found in source path
                 elif files and not os.path.isdir(src_path):
                     dir_rm_list.append(root)
-                    #print ("Directory not found in source path (added to dir removal list): {}".format(root))
+                    #print("Directory not found in source path (added to dir removal list): {}".format(root))
 
     print("\nEmpty target (backup) directories to be removed:\n{}\n".format('\n'.join(empty_dir_rm_list)))
     print("Target-only (backup) directories to be removed: \n{}\n".format('\n'.join(dir_rm_list)))
-    print ("Files/directories only in backup: \n{}\n".format('\n'.join(file_rm_list)))
+    print("Files/directories only in backup: \n{}\n".format('\n'.join(file_rm_list)))
 
     if (len(file_rm_list) >= 1 or len(dir_rm_list) >=1 or len(empty_dir_rm_list) >=1):
-        removal(file_rm_list, dir_rm_list, empty_dir_rm_list, log_file,path_src, path_backup)
+        removal(file_rm_list, dir_rm_list, empty_dir_rm_list, log_file, path_backup)
     else:
         sys.exit()
 
-def removal(file_rm_list, dir_rm_list, empty_dir_rm_list, log_file, path_src, path_backup):
+def removal(file_rm_list, dir_rm_list, empty_dir_rm_list, log_file, path_backup):
     """Remove files, directories, empty directories passed to this function
     and write out to log file
     """
 
-    files,dirs,empty_dirs,log_file = file_rm_list, dir_rm_list, empty_dir_rm_list, log_file
+    empty_dirs = empty_dir_rm_list
     removed_files = []
     removed_dirs = []
 
-    if len(files)>=1:
+    if len(file_rm_list)>=1:
 
         print ("\n--------------------------------")
         print ("-------  Removing Files  -------")
         print ("--------------------------------\n")
 
-        for file in file_rm_list:
-            full_path = os.path.join(path_backup,file)
+        for filenm in file_rm_list:
+            full_path = os.path.join(path_backup,filenm)
             print("Attempting to Removing file: {}".format(full_path))
             try:
                 os.remove(full_path)
                 print("File Deleted: {}".format(full_path))
-                removed_files.append(file)
+                removed_files.append(filenm)
             except:
                 print("Could not delete")
 
             print("\n")
 
-    if len(dirs) >= 1:
+    if len(dir_rm_list) >= 1:
 
         print ("\n--------------------------------")
         print ("-----  Removing Directories  -----")
         print ("--------------------------------\n")
 
-        for every_dir in dirs:
+        for every_dir in dir_rm_list:
             try:
                 shutil.rmtree(every_dir)
                 print("Directory Removed: {}\n".format(every_dir))
                 removed_dirs.append(every_dir)
             except OSError as e:  ## if failed, report it back to the user ##
-                print ("Error: {} - {}.\n".format(e.filename, e.strerror))
+                print("Error: {} - {}.\n".format(e.filename, e.strerror))
 
     if len(empty_dirs) >= 1:
 
@@ -155,9 +155,9 @@ def removal(file_rm_list, dir_rm_list, empty_dir_rm_list, log_file, path_src, pa
             except:
                 print("Could not remove directory: {}\n".format(empty_d))
 
-    print ("--------------------------------")
-    print ("-------  Writing Log  ----------")
-    print ("--------------------------------\n")
+    print("--------------------------------")
+    print("-------  Writing Log  ----------")
+    print("--------------------------------\n")
 
     if log_file != '' and (os.path.isdir(os.path.dirname(log_file))):
 
@@ -175,9 +175,9 @@ def removal(file_rm_list, dir_rm_list, empty_dir_rm_list, log_file, path_src, pa
                     output_file.write(every_dir + '\n')
                 output_file.write('-------------------------------- \n')
 
-        print ("---- Log Written to {} -- at {} ----".format(log_file, current_time))
-        print ("\n")
-    
+        print("---- Log Written to {} -- at {} ----".format(log_file, current_time))
+        print("\n")
+
     sys.exit()
 
 if __name__ == "__main__":
